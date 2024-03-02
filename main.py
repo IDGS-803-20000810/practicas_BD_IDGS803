@@ -31,6 +31,55 @@ def index():
         
     return render_template("index.html",form=form)
 
+@app.route("/eliminar",methods=["GET", "POST"])
+def eliminar():
+    form = forms.EmpleadoForm(request.form)
+    if request.method == "GET":
+        id=request.args.get('id')
+        emp=db.session.query(Empleados).filter(Empleados.id==id).first()
+        form.id.data=request.args.get('id')
+        form.nombre.data=emp.nombre
+        form.correo.data=emp.correo
+        form.telefono.data=emp.telefono
+        form.direccion.data=emp.direccion
+        form.sueldo.data=emp.sueldo
+    if request.method == "POST" :
+        id=form.id.data
+        emp=Empleados.query.get(id)
+        db.session.delete(emp)
+        db.session.commit()
+        return redirect('tabla_empleados')
+    
+    return render_template('eliminar.html',form=form)
+
+@app.route("/modificar",methods=["GET", "POST"])
+def modificar():
+    form = forms.EmpleadoForm(request.form)
+    
+    if request.method == "GET":
+        id=request.args.get('id')
+        emp=db.session.query(Empleados).filter(Empleados.id==id).first()
+        form.id.data=request.args.get('id')
+        form.nombre.data=emp.nombre
+        form.correo.data=emp.correo
+        form.telefono.data=emp.telefono
+        form.direccion.data=emp.direccion
+        form.sueldo.data=emp.sueldo
+    if request.method == "POST" :
+        id=form.id.data
+        emp=db.session.query(Empleados).filter(Empleados.id==id).first()
+        emp.nombre=form.nombre.data
+        emp.correo=form.correo.data
+        emp.telefono=form.telefono.data
+        emp.direccion=form.direccion.data
+        emp.sueldo=form.sueldo.data
+        db.session.add(emp)
+        db.session.commit()
+        return redirect('tabla_empleados')
+    
+    return render_template('modificar.html',form=form)
+
+
 @app.route("/tabla_empleados", methods=["GET", "POST"])
 def ABC_Completo():
     form=forms.EmpleadoForm(request.form)
