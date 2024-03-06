@@ -1,0 +1,130 @@
+{% extends 'layout.html' %}
+
+
+{% block content %}
+{% from "_macros.html" import render_field %}
+
+<div class="container">
+
+
+    <form name="registro" action="/add-detalle-pizza" id="modificar" method="post">
+        <div class="row">
+
+            <div class="col">
+                {{ render_field(detalleForm.tamano) }}
+
+            </div>
+
+            <div class="form-group col controls">
+                {{render_field(detalleForm.numPizzas,class="form-control")}}
+            </div>
+
+            <div class="col control-group">
+                <div class="form-group row controls">
+
+                    {{render_field(detalleForm.jamon,class="")}}
+
+                </div>
+                <div class="form-group row controls">
+
+                    {{render_field(detalleForm.pina,class="")}}
+
+                </div>
+                <div class="form-group row controls">
+
+                    {{render_field(detalleForm.champ,class="")}}
+
+                </div>
+                <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+                <input class="btn btn-success" type="submit" id="agregar" name="agregar" value="Agregar">
+            </div>
+
+        </div>
+
+
+    </form>
+</div>
+
+
+<form name="registro" action="/pizzas" id="modificar" method="post">
+    <div class="row">
+
+        <div class=" col-4 ">
+            {{render_field(ordenForm.nombre,class="form-control")}}
+        </div>
+        <div class="col-4 ">
+            {{render_field(ordenForm.direccion,class="form-control")}}
+        </div>
+        <div class=" col-4 ">
+            {{render_field(ordenForm.telefono,class="form-control")}}
+        </div>
+
+    </div>
+
+    <div class="row">
+        <div class="col-6">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>Tamaño</th>
+                        <th>Ingredientes</th>
+                        <th>Num. Pizzas</th>
+                        <th>Subtotal</th>
+
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in detalle %}
+                    <tr>
+                        <td>{{item.no}}</td>
+                        <td>{{item.tamano}}</td>
+                        <td>{{item.num_pizzas}}</td>
+                        <td>{{item.ingredientes}}</td>
+                        <td>{{item.subtotal}}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="col-6">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Ventas del dia</th>
+
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for venta in ventasDia %}
+                    <tr>
+                        <td>{{venta.nombre}} ${{venta.total}}</td>
+                    </tr>
+                    {% endfor %}
+
+                    <tr>
+                        <td>TOTAL DE VENTAS: ${{totalVentasDia}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+    <input class="btn btn-success" type="submit" id="terminar" name="Terminar" value="Terminar">
+</form>
+
+<form name="eliminar" action="/quitar-detalle" id="eliminar" method="post">
+    <div class="row">
+        <div class="col-1">
+        <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+        <input class="btn btn-danger" type="submit" id="quitar" name="quitar" value="Quitar">
+        </div>
+    </div>
+</form>
+
+{% endblock content %}

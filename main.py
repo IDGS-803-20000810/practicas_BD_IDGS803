@@ -1,10 +1,10 @@
-from flask import Flask, request, render_template, Response, g, redirect
+from flask import Flask, request, render_template, Response, g, redirect, session
 from flask_wtf.csrf import CSRFProtect
 from config import DevelopmentConfig
 import forms
 
 from models import db
-from models import Empleados
+from models import Empleados, DetalleOrden, Orden
 
 app = Flask(__name__)
 app.secret_key = "esta es la clave secreta"
@@ -85,6 +85,117 @@ def ABC_Completo():
     form=forms.EmpleadoForm(request.form)
     empleados=Empleados.query.all()
     return render_template('tabla_empleados.html',empleados=empleados)
+
+@app.route("/pizzas", methods=["GET", "POST"])
+def pizzas():
+    detalleForm = forms.DetalleOrdenForm(request.form)
+    ordenForm = forms.OrdenPizzaForm(request.form)
+    
+    if request.method == "GET":
+        session['detalle'] = [];
+        ventasDia = Orden.query.all()
+        totalVentasDia=0.0
+        for venta in ventasDia:
+            totalVentasDia += venta.total
+            
+        return render_template("pizzas.html",ordenForm=ordenForm, detalleForm=detalleForm, detalle =  session['detalle'], ventasDia = ventasDia,totalVentasDia=totalVentasDia)
+
+    
+    if request.method == "POST":
+        total = 0
+        
+        for orden in session['detalle']:
+            total += orden['subtotal']
+        
+        orden = Orden(nombre=ordenForm.nombre.data,
+                        direccion=ordenForm.direccion.data,
+                        telefono=ordenForm.telefono.data,
+                        total=total)
+        db.session.add(orden)
+        db.session.commit()
+        
+        ventasDia = Orden.query.all()
+        
+        totalVentasDia = 0.0
+        for venta in ventasDia:
+            totalVentasDia +=  venta.total
+            
+
+        return render_template("pizzas.html",ordenForm=ordenForm, detalleForm=detalleForm, detalle = session['detalle'], ventasDia = ventasDia, totalVentasDia=totalVentasDia)
+
+@app.route("/quitar-detalle", methods=["POST"])
+def quitar():
+    detalleForm = forms.DetalleOrdenForm(request.form)
+    ordenForm = forms.OrdenPizzaForm(request.form)
+    
+    if request.method == "POST":
+        session['detalle'].pop()
+        ventasDia = Orden.query.all()
+        totalVentasDia=0.0
+        for venta in ventasDia:
+            totalVentasDia += venta.total
+        return render_template("pizzas.html",ordenForm=ordenForm, detalleForm=detalleForm, detalle =  session['detalle'], ventasDia = ventasDia,totalVentasDia=totalVentasDia)
+
+@app.route("/add-detalle-pizza", methods=["POST"])
+def addDetalle():
+    
+    
+    detalleForm = forms.DetalleOrdenForm(request.form)
+    ordenForm = forms.OrdenPizzaForm(request.form)
+    
+    tamano = detalleForm.tamano.data
+    numPizzas = int(detalleForm.numPizzas.data)
+    
+    jamon = detalleForm.jamon.data
+    pina = detalleForm.pina.data
+    champ = detalleForm.champ.data
+    
+    subtotal = float(tamano);
+    subtotal += 10 if jamon else 0
+    subtotal += 10 if pina else 0
+    subtotal += 10 if champ else 0
+    
+    subtotal = subtotal*numPizzas
+    
+    stringTamano = ""
+    
+    match (int(tamano)):
+        case (40):
+            stringTamano = "Chica"
+        case (80):
+            stringTamano = "Mediana"
+        case (120):
+            stringTamano = "Grande"
+            
+    stringIng = ""
+    
+    stringIng += "jamon," if jamon else ""
+    stringIng += "piña," if pina else ""
+    stringIng += "champiñones" if champ else ""
+    
+    # detalle = DetalleOrden(tamano=stringTamano,
+    #                 num_pizzas=numPizzas,
+    #                 ingredientes = stringIng,
+    #                 subtotal = subtotal
+    #                 )
+    
+    listDetalle = session['detalle']
+    
+    listDetalle.append({
+                    'no':len(listDetalle)+1,
+                    'tamano':stringTamano,
+                    'num_pizzas':numPizzas,
+                    'ingredientes': stringIng,
+                    'subtotal':subtotal})
+    
+    session['detalle'] = listDetalle
+    
+    ventasDia = Orden.query.all()
+    totalVentasDia=0.0
+    for venta in ventasDia:
+            totalVentasDia +=  venta.total
+            
+    return render_template("pizzas.html",ordenForm=ordenForm, detalleForm=detalleForm, detalle = session['detalle'], ventasDia = ventasDia,totalVentasDia=totalVentasDia)
 
 if __name__ == "__main__":
     csrf.init_app(app)
